@@ -1,0 +1,528 @@
+package Datafix;
+
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.axis.utils.StringUtils;
+
+
+
+
+//  /local/apps/weblogic/wls1033v9/wlserver_10.3/server/lib
+public class MediaConsumerReport {
+	
+	/*
+	static String oraurl = "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL = TCP)(HOST = ewnvldb06-vip.eppg.com)(PORT = 1521))(ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb07-vip.eppg.com)(PORT = 1521))(ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb08-vip.eppg.com)(PORT = 1521)) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = ertload)))";
+	static String oradriver = "oracle.jdbc.driver.OracleDriver";
+	static String orauser = "olcerlive";
+	static String orapass = "ulcerlive2004";
+    	
+	
+	static String oraurl = "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL = TCP)(HOST = ewnvldb06-vip.eppg.com)(PORT = 1521))(ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb07-vip.eppg.com)(PORT = 1521))(ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb08-vip.eppg.com)(PORT = 1521)) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = clssload)))";
+	static String oradriver = "oracle.jdbc.driver.OracleDriver";
+	static String orauser = "classware";
+	static String orapass = "classware";
+    */
+
+	static final String HostURL = "http://ezto.mhhm.mcgraw-hill.com/";
+	//static final String HostURL = "http://qaliveeztest.mhhe.com/";
+	/*
+	static final String oraurl      = "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL = TCP)(HOST = nj09mhe0234-vip.eppg.com)(PORT = 1521))(ADDRESS = (PROTOCOL = TCP)(HOST = nj09mhe0235-vip.eppg.com)(PORT = 1521)) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = eztoqalv)))";
+	static final String oradriver   = "oracle.jdbc.driver.OracleDriver";
+	static final String orauser     = "eztoapp";
+	static final String orapass     = "eztoapp123";
+	static String siteid    = "muon:";
+    */
+	/** My SQL Dev */
+	
+	static String mysqlurl = "jdbc:mysql://nvldb06.eppg.com:3306/";
+	static String mysqldb = "ezto_dev";
+	static String mysqldriver = "com.mysql.jdbc.Driver";
+	static String mysqluser = "ezto_dev";
+	static String mysqlpass = "pixie";
+	//static String siteid    = "muon:";
+
+    /** My SQL Prod */
+	/*
+	static String mysqlurl = "jdbc:mysql://ewnvldb13.eppg.com:3306/";
+	static String mysqldb = "aris_spark";
+	static String mysqldriver = "com.mysql.jdbc.Driver";
+	static String mysqluser = "aris_spark";
+	static String mysqlpass = "pixie";
+    static String siteid    = "eztestonline:";
+	*/
+	
+	static final String  oraurl        = "jdbc:oracle:thin:@(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb01-vip.eppg.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb02-vip.eppg.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb03-vip.eppg.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb04-vip.eppg.com)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb05-vip.eppg.com)(PORT = 1521)) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = eztoprod)) )";
+	static final String oradriver      = "oracle.jdbc.driver.OracleDriver";
+    static final String orauser        = "ezto";
+	static final String orapass        = "eztoprod";
+	static final String siteid         = "eztestonline:";
+	
+	/*
+	public static final String mySqlJDBCURL = "jdbc:mysql://ewnvldb15.eppg.com/aris_spark_pqa";
+	public static final String mySqlusername = "aris_spark_pqa";
+	public static final String mySqlpassword = "aris_spark_pqa";
+	*/
+	static ArrayList mediaConsumerList = new ArrayList();
+	static ArrayList missingMediaList = new ArrayList();
+	static Map mediaConsumerMap = new HashMap();
+		
+	/*
+	static String oraurl = "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL = TCP)(HOST = ewnvldb06-vip.eppg.com)(PORT = 1521))(ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb07-vip.eppg.com)(PORT = 1521))(ADDRESS = (PROTOCOL = TCP)(HOST = ewnvldb08-vip.eppg.com)(PORT = 1521)) (LOAD_BALANCE = yes) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = eztoload)))";
+	static String oradriver = "oracle.jdbc.driver.OracleDriver";
+	static String orauser = "ezto";
+	static String orapass = "eztoload";
+    */
+	
+	static String ORACLE_DB = "oracle";
+	static String MYSQL_DB = "mysql";
+	static String database = ORACLE_DB;
+
+	static FileWriter fstream = null;
+	static BufferedWriter out = null;
+	
+	public static void main(String argv[]) throws Exception{
+    
+	Connection con = null;
+    PreparedStatement pst = null;
+    ResultSet rs = null;       
+    
+    try {
+    	con = getConnection();
+    	fstream = new FileWriter("src/Datafix/output.txt");
+    	out = new BufferedWriter(fstream);
+    	/*
+    	String finalpath = printPath(con,"13041049905737343");
+    	out.write("\nfinalpath " + finalpath);
+    	*/
+    	collectandfixMedia(con,"13057312666106843");
+    	
+    } catch(SQLException exSQLException){
+	    exSQLException.printStackTrace();
+	} catch(Exception exException){
+	    exException.printStackTrace();
+    }finally{
+    	if(rs != null){
+    	  rs.close();
+    	}
+		if(pst != null){
+    	  pst.close();
+		}
+		if(con != null){
+		  con.close();
+		}
+		if(out != null){
+		  out.close();	
+		}
+		if(fstream != null){
+		  fstream.close();	
+		}
+    }
+  }
+	
+	public static Connection getConnection() throws SQLException, Exception{
+		  Connection con = null;
+		  System.out.println("database : " + database);
+		  if(database.equals(ORACLE_DB)){
+	    	Class.forName(oradriver);
+	        con = DriverManager.getConnection(oraurl, orauser, orapass);
+	      } else if(database.equals(MYSQL_DB)){
+	    	Class.forName(mysqldriver);
+	        con = DriverManager.getConnection(mysqlurl + mysqldb, mysqluser, mysqlpass);
+	      }
+		  return con;
+	}
+	
+	private static String checkMedia(Connection con,String mediaID) throws Exception{
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try{
+		  ps = con.prepareStatement("SELECT mediaid FROM media m WHERE m.mediaid = ?");
+		  ps.setString(1, mediaID);
+		  rs = ps.executeQuery();
+		  if(rs.next()){
+		    return "Y"; 	
+		  }
+		  return "N";
+		}
+		catch(Exception ex){
+		  ex.printStackTrace(); 	
+		}
+		finally{
+		   	if(rs != null){
+		      rs.close();
+		    }
+			if(ps != null){
+		      ps.close();
+			}			
+		}
+		return "N";
+	}
+	
+	private static void mediaConumerCorrectionList(Connection con,String testID, String name) throws Exception{
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try{
+		  ps = con.prepareStatement("SELECT mediaid FROM mediaconsumers mc WHERE mc.testid = ? AND mc.NAME = ?");
+		  ps.setString(1, testID);
+		  ps.setString(2, name);
+		  rs = ps.executeQuery();
+		  String mediaID = "";
+		  String checkMediaExists = "N";
+		  Map missingMedia = null;
+		  Map mediaConsumerMap = null;
+		  while(rs.next()){
+			mediaID = rs.getString("mediaid"); 
+			checkMediaExists = checkMedia(con,mediaID); 
+			if(checkMediaExists.equals("Y")){
+			  mediaConsumerMap = new HashMap();	
+			  out.write("\nSELECT * FROM mediaconsumers mc WHERE mc.testID = '" + testID + "' AND name = '" + name + "'");
+			  mediaConsumerMap.put("testID", testID);
+			  mediaConsumerMap.put("name", name);
+			  mediaConsumerMap.put("mediaID", mediaID);
+			  mediaConsumerList.add(mediaConsumerMap);
+			  break;
+			}
+		  }
+		  if(checkMediaExists.equals("N")){ 
+		    missingMedia = new HashMap();
+		    missingMedia.put("testID", testID);
+		    missingMedia.put("name", name);
+		    missingMediaList.add(missingMedia);
+		  }
+		}
+		catch(Exception ex){
+		  ex.printStackTrace(); 	
+		}
+		finally{
+		   	if(rs != null){
+		      rs.close();
+		    }
+			if(ps != null){
+		      ps.close();
+			}			
+		}
+	}
+	
+	static String	LONG_STRING		= "***UTF String Too Long for writeUTF***";
+	
+	public static String readString( DataInputStream input )
+	throws IOException
+    {
+	  String result= input.readUTF();
+	  if (result.equals(LONG_STRING))
+	  {
+		//System.out.println("inputting " + LONG_STRING);
+		int arrayLength= input.readInt();
+		byte[] barray= new byte[ arrayLength ];
+		input.read( barray, 0, arrayLength );
+		result= new String( barray, "UTF-8" );
+	 }
+	 return(result);
+    }
+	
+	
+	public static ConcurrentHashMap hashFromStream( InputStream bStream )
+	{
+		ConcurrentHashMap result= new ConcurrentHashMap();		
+		if (bStream != null) 
+		{
+			try 
+			{
+				DataInputStream input= new DataInputStream(bStream);
+				
+				int count= input.readInt();
+				for (int i= 0 ; i< count ; i++) 
+				{
+					String key= input.readUTF();
+					String value= readString(input);
+					result.put( key, value );
+				}
+				bStream.close();
+			} 
+			catch (IOException i) 
+			{
+				//System.out.println("IOException in tp_sql.hashFromStream()");
+				//i.printStackTrace();
+			}
+		}
+		
+		return( result );
+	}
+	
+	
+	private static String loadParent(Connection con,String entryID) throws Exception{
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Map mediaMap = null;
+		ConcurrentHashMap librarydata = null;
+		String finalvalue = "";
+		try{
+		  ps = con.prepareStatement(" SELECT titleid, parentid, entrytype, data FROM library WHERE entryid = ? ");
+		  ps.setString(1, entryID);
+		  rs = ps.executeQuery();
+		  if(rs.next()){
+			String URL = rs.getString("titleid");
+			String parentid =  rs.getString("parentid");
+			String entryType = rs.getString("entrytype");
+			librarydata =  hashFromStream(rs.getBinaryStream("data"));
+			if(!StringUtils.isEmpty(parentid)){
+			   String path = loadParent(con,parentid);	
+			   //System.out.println(" path " + path + " parentid " + parentid);
+			   finalvalue = path + "-->" + finalvalue;	
+			}			
+			Question q = null;
+			Iterator i = librarydata.keySet().iterator();
+			boolean valueFound = false;
+			while(i.hasNext()){
+			  String key = (String)i.next();  	
+			  String value = (String)librarydata.get(key);
+			  //if(!"tableOfContents".equalsIgnoreCase(key))
+			  //System.out.println("Key " + key  + "   Value " + value + " entry type " + entryType);
+			  if("author".equalsIgnoreCase(key)){
+				 //System.out.println(" Value " + value);  
+				 finalvalue = finalvalue + value;
+				 valueFound = true;
+			  }
+			  else if("leafTitle".equalsIgnoreCase(key)){
+				 if(value.equalsIgnoreCase("ROOT")){
+				   value = "TESTBANK";	 
+				 }
+				 if(!valueFound){
+				   finalvalue = finalvalue + value;
+				 }
+				 else{
+				   finalvalue = finalvalue + "--" + value;	 
+				 }
+				 //System.out.println("Value " + value + " entry type " + entryType);
+			  }
+			  if("edition".equalsIgnoreCase(key)){
+				finalvalue = finalvalue + "--" + value;  
+				//System.out.println(" Value " + value + " entry type " + entryType);  	  
+			  }
+			}
+
+		  }
+		}
+		catch(Exception ex){
+		  con.rollback();
+		  ex.printStackTrace(); 	
+		}
+		finally{
+		   	if(rs != null){
+		      rs.close();
+		    }
+			if(ps != null){
+		      ps.close();
+			}			
+		}
+		return finalvalue;
+	}	
+	
+	private static String printPath(Connection con,String testID) throws Exception{
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Map mediaMap = null;
+		ConcurrentHashMap librarydata = null;
+		String finalPath = "";
+		String entryType = "";
+		try{
+		  ps = con.prepareStatement(" SELECT entryType, titleid, parentid, data FROM library WHERE testID = ? ");
+		  ps.setString(1, testID);
+		  rs = ps.executeQuery();
+		  if(rs.next()){
+			String URL = rs.getString("titleid");
+			String parentid =  rs.getString("parentid");
+			librarydata =  hashFromStream(rs.getBinaryStream("data"));
+			entryType = rs.getString("entryType");
+			if(!"0".equalsIgnoreCase(entryType)){
+			   finalPath = loadParent(con,parentid);	
+			}			
+			Question q = null;
+			Iterator i = librarydata.keySet().iterator(); 
+			while(i.hasNext()){
+			  String key = (String)i.next();  	
+			  String value = (String)librarydata.get(key);
+			  if("leafTitle".equalsIgnoreCase(key)){
+				finalPath = finalPath + "-->" + value; 
+			    //System.out.println("Value " + value );
+			  }
+			}
+		  }
+		}
+		catch(Exception ex){
+		  con.rollback();
+		  ex.printStackTrace(); 	
+		}
+		finally{
+		   	if(rs != null){
+		      rs.close();
+		    }
+			if(ps != null){
+		      ps.close();
+			}			
+		}
+		return finalPath;
+	}
+	
+	
+	private static void printURL(Connection con,String testID,String name) throws Exception{
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Map mediaMap = null;
+		String path = "";
+		try{
+		  ps = con.prepareStatement(" SELECT url, title , data FROM tests WHERE testID = ?");
+		  ps.setString(1, testID);
+		  rs = ps.executeQuery();
+		  if(rs.next()){
+			String URL = rs.getString("url");
+			String title =  rs.getString("title");
+			/** Get Questions */
+			rs.close();
+			ps.close();
+			ps = con.prepareStatement("SELECT consumerid FROM mediaconsumers mc WHERE mc.testID = ? AND name = ? AND consumerid <> '0' AND not exists ( SELECT 1 FROM media m where m.mediaid = mc.mediaid)");
+			ps.setString(1,testID);
+			ps.setString(2,name);
+            rs = ps.executeQuery();
+            while(rs.next()){
+			  /** End of Get Question */
+              String questionID = rs.getString("consumerid");
+              //String localID = (String)revLookup.get(questionID);
+			  //printQuestions(con,testID,name,questionID);
+			  Question q = Question.getQuestion(con, questionID);
+			  path = printPath(con,testID);
+			  if(!StringUtils.isEmpty(path)){
+			    out.write("\n"+HostURL + URL.substring(siteid.length()) + "?REQUEST=SHOWmedia&media=" + name + "      " + printPath(con,testID) + "-->" + q.getSelectionTitle() + "(" + q.getQuestionType() + ")");
+			  }
+			  else{
+				out.write("\n" + HostURL + URL.substring(siteid.length()) + "?REQUEST=SHOWmedia&media=" + name + "       " + title +  "-->" + q.getSelectionTitle() + "(" + q.getQuestionType() + ")");
+			  }
+            }
+ 		  }
+		}
+		catch(Exception ex){
+		  con.rollback();
+		  ex.printStackTrace(); 	
+		}
+		finally{
+		   	if(rs != null){
+		      rs.close();
+		    }
+			if(ps != null){
+		      ps.close();
+			}			
+		}
+	}	
+	
+	private static void mediaConsumerCorrection(Connection con) throws Exception{
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Map mediaMap = null;
+		String testID = "";
+		String name = "";
+		String mediaID = "";
+		Map mediaMissing = null;
+		try{
+		  if(database.equals(ORACLE_DB)) con.setAutoCommit(false);	
+		  //ps = con.prepareStatement("UPDATE mediaconsumers mc SET mediaid = ? WHERE testid = ? AND NAME = ? AND not exists ( SELECT 1 FROM media m where m.mediaid = mc.mediaid) ");
+		  for(int i=0;i<mediaConsumerList.size();i++){
+			 mediaMap = (HashMap)mediaConsumerList.get(i);
+			 testID = (String)mediaMap.get("testID");   
+			 name = (String)mediaMap.get("name");
+			 mediaID = (String)mediaMap.get("mediaID");
+			 printURL(con,testID,name);
+			 out.write("\n UPDATE mediaconsumers mc SET mediaid = '" + mediaID + "' WHERE testid = '" + testID + "' AND NAME = '" + name + "' AND not exists ( SELECT 1 FROM media m where m.mediaid = mc.mediaid)");
+			 /*
+			 ps.setString(1, mediaID);
+			 ps.setString(2, testID);
+			 ps.setString(3, name);
+			 ps.addBatch();
+			 */
+		  }
+		  //ps.executeBatch();
+		  
+		  out.write("\n********************************** MISSING MEDIA (Not associated with Library) ***************************** ");
+		  
+		  if(ps != null){
+		    ps.close();
+		  }
+		 
+		  //ps = con.prepareStatement("DELETE FROM mediaconsumers mc WHERE testid = ? AND NAME = ? AND not exists ( SELECT 1 FROM media m where m.mediaid = mc.mediaid) ");
+		  
+		  for(int i=0;i<missingMediaList.size();i++){
+			 mediaMissing = (HashMap)missingMediaList.get(i);
+			 testID = (String)mediaMissing.get("testID");   
+			 name = (String)mediaMissing.get("name");
+			 //System.out.println(" Test ID " + testID + " name " + name);
+			 out.write("\n DELETE FROM mediaconsumers mc WHERE testid = '"+ testID + "' AND NAME = '"+name+"' AND not exists ( SELECT 1 FROM media m where m.mediaid = mc.mediaid)");
+			 printURL(con,testID,name);			 
+			 /*
+			 ps.setString(1, testID);
+			 ps.setString(2, name);
+			 ps.addBatch();
+			 */ 	 
+		  }	
+		  //ps.executeBatch();
+		  
+		  //if(database.equals(ORACLE_DB)) con.commit();
+		  
+		}
+		catch(Exception ex){
+		  if(database.equals(ORACLE_DB)) con.rollback();
+		  ex.printStackTrace(); 	
+		}
+		finally{
+		   	if(rs != null){
+		      rs.close();
+		    }
+			if(ps != null){
+		      ps.close();
+			}			
+		}
+	}	
+	
+	private static void collectandfixMedia(Connection con,String tID) throws Exception{
+        PreparedStatement ps = null;
+	    ResultSet rs = null;	    
+	    try{
+	      ps = con.prepareStatement("SELECT mc.testID,mc.name FROM mediaconsumers mc WHERE mc.consumerid = '0' AND testID = ? AND NOT EXISTS ( SELECT 1 FROM media m WHERE m.mediaid = mc.mediaid)");
+	      ps.setString(1,tID);
+	      rs = ps.executeQuery();
+	      while(rs.next()){
+	    	String testID = rs.getString("testID");
+	    	String name = rs.getString("name");
+	    	mediaConumerCorrectionList(con,testID,name);    	
+	      }
+	      mediaConsumerCorrection(con);
+	    }
+	    catch(Exception ex){
+	      ex.printStackTrace();	
+	    }
+	    finally{
+		   	if(rs != null){
+			    rs.close();
+			}
+			if(ps != null){
+			    ps.close();
+			}
+			if(con != null){
+			  con.close();	
+			}
+	    }
+	}
+}
+

@@ -1,0 +1,29 @@
+<question>
+	<selectionTitle>Question 11W-4a (Auto-Gradable)</selectionTitle>
+	<displayType>Multiple Choice</displayType>
+	<actualType>WK</actualType>
+	<chat>false</chat>
+	<chemdraw>false</chemdraw>
+	<contentLinks>
+		<contentLink>
+			<linkType>ebook</linkType>
+		</contentLink>
+	</contentLinks>
+	<questionProperties>
+		<completeIncompleteGrading>false</completeIncompleteGrading>
+		<forceManualScoring>automatic</forceManualScoring>
+	</questionProperties>
+	<answers>
+		<answer>
+			<name>new</name>
+			<type>2</type>
+		</answer>
+		<answer>
+			<name>rate2</name>
+			<type>10</type>
+			<answerProperties>
+				<identifier>common/graphingtool/2.0/gtinit.html</identifier>
+			</answerProperties>
+		</answer>
+	</answers>
+</question>
